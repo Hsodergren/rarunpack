@@ -51,7 +51,7 @@ let fancy () =
      (match ev with
      | `New -> m := (fname,0)::!m; show_print (`List !m)
      | `Progress p -> m := assoc_update fname p !m; show_print (`List !m)
-     | `Done -> m := assoc_remove fname !m; show_print (`List !m)
+     | `Done -> m := assoc_remove fname !m; T.erase T.Screen; show_print (`List !m)
      | `Visit -> show_print (`Visit fname));
      Lwt.return_unit)
 
@@ -68,8 +68,6 @@ let f ~pool ~remove ~printer a ~fs ~ds:_ =
       | None -> Lwt.return_unit)
 
 type printer = Fancy | Stdout [@@deriving show {with_path=false}]
-
-
 
 let printer_conv = Arg.conv
     ((fun s ->
@@ -95,15 +93,16 @@ let remove =
   Arg.(value & flag & info ["r";"remove"] ~doc)
 
 let path =
-  let doc = "From where should i unpack things recusivly from?" in
-  Arg.(required & opt (some dir) None & info ["p";"path"] ~doc)
+  let doc = "From where should I unpack things recusivly from?" in
+  let docv = "DIR" in
+  Arg.(required & pos 0 (some dir) None & info [] ~doc ~docv)
 
 let concur_unrar =
-  let doc = "How many concurrent unrar worker pool should i employ?" in
+  let doc = "How big concurrent unrar worker pool should I use?" in
   Arg.(value & opt int 4 & info ["u";"n-unrar"] ~doc)
 
 let concur_dir =
-  let doc = "How many concurrent directory walkers should i employ?" in
+  let doc = "How many concurrent directory walkers should I use?" in
   Arg.(value & opt int 10 & info ["d";"n-dir"] ~doc)
 
 let printer =
