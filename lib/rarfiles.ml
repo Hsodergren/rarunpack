@@ -37,8 +37,7 @@ let print_lines ~f fname lines =
     | Some line ->
       let%lwt () = f fname (`Progress line) in
       loop percents
-    | None ->
-      f fname `Done
+    | None -> Lwt.return_unit
   in
   Lwt_stream.filter_map
     (fun s ->
@@ -53,8 +52,17 @@ let unrar ?(f=noop) {rar;_} =
   let fname = Fpath.filename rar in
   let%lwt () = f fname `New in
   let cwd = Fpath.parent rar |> Fpath.to_string in
-  let lines = Lwt_process.pread_lines ~cwd ("", [|"unrar"; "-y"; "x"; Fpath.to_string rar|]) in
-  print_lines ~f fname lines
+  let r_fd,w_fd = Lwt_unix.pipe_in () in
+  let command = ("", [|"unrar"; "-y"; "x"; Fpath.to_string rar|]) in
+  let process = Lwt_process.exec ~cwd ~stdout:(`FD_move w_fd) command in
+  let lines = Lwt_io.of_fd ~mode:Lwt_io.input r_fd |> Lwt_io.read_lines in
+  let%lwt (),status = Lwt.both (print_lines ~f fname lines) process in
+  let%lwt () = f fname `Done in
+  (match status with
+  | WEXITED 0 -> `Ok
+  | WEXITED i -> `Exit_error i
+  | _ -> `Other)
+  |> Lwt.return
 
 let remove {all;_} =
   List.map Fpath.to_string all

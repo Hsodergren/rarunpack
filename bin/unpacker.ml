@@ -60,11 +60,15 @@ let f ~pool ~remove ~printer a ~fs ~ds:_ =
   Lwt_pool.use pool (fun () ->
       let%lwt () = printer (Fpath.to_string a) `Visit in
       match Rarfiles.of_list fs with
-      | Some r ->
-        let%lwt () = Rarfiles.unrar ~f:printer r in
-        if remove
-        then Rarfiles.remove r
-        else Lwt.return_unit
+      | Some r -> begin
+        match%lwt Rarfiles.unrar ~f:printer r with
+        | `Ok ->
+          if remove
+          then Rarfiles.remove r
+          else Lwt.return_unit
+        | `Exit_error i -> Lwt_io.printf "ERROR: exit code %d\n%!" i
+        | `Other -> Lwt_io.printf "ERROR: other error\n%!"
+      end
       | None -> Lwt.return_unit)
 
 type printer = Fancy | Stdout [@@deriving show {with_path=false}]
