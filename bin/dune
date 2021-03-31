@@ -1,0 +1,4 @@
+(executable
+ (name unpacker)
+ (libraries lwt lwt.unix rarunpack cmdliner ANSITerminal ppx_deriving)
+ (preprocess (pps ppx_deriving.show lwt_ppx)))

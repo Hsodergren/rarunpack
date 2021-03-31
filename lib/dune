@@ -1,0 +1,4 @@
+(library
+ (name rarunpack)
+ (libraries lwt lwt.unix fpath re)
+ (preprocess (pps lwt_ppx)))

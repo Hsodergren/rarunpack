@@ -1,5 +1,0 @@
-(executable
- (name rarunpack)
- (libraries core progress output)
- (preprocess (pps ppx_jane))
-)
