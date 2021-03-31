@@ -3,7 +3,7 @@ type t = {
   rar: Fpath.t;
 }
 
-type ev = [`New | `Progress of int | `Done | `Visit]
+type ev = [`New | `Progress of int | `Done]
 
 let digits = Re.(alt [repn digit 1 (Some 2); str "100"])
 let re = Re.(compile @@ seq [bow; group (digits); char '%'])
